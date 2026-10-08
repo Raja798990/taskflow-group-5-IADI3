@@ -5,6 +5,7 @@
     box-sizing: border-box;
 }
 
+/* Purple gradient background = brand identity */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -29,6 +30,7 @@ body {
     margin-bottom: 3rem;
 }
 
+/* Glass-effect cards using transparency + blur */
 .header-content {
     background: rgba(255, 255, 255, 0.95);
     padding: 2rem;
@@ -89,6 +91,7 @@ body {
     background: #f8fafc;
 }
 
+/* Focus ring for keyboard accessibility */
 .task-input:focus {
     outline: none;
     border-color: #667eea;
@@ -116,6 +119,7 @@ body {
     white-space: nowrap;
 }
 
+/* Hover lift gives feedback that the button is clickable */
 .add-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
@@ -187,6 +191,7 @@ body {
     border-color: #cbd5e0;
 }
 
+/* Completed tasks get a green tint and strikethrough to stand out */
 .task-item.completed {
     background: #f0fff4;
     border-color: #9ae6b4;
@@ -294,6 +299,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
+/* Auto-fit grid adapts the number of stat cards to the screen width */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -331,7 +337,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* Responsive Design */
+/* Mobile layout below 768px: input stacks vertically */
 @media (max-width: 768px) {
     .container {
         padding: 1rem 0.5rem;
@@ -387,6 +393,7 @@ body {
     }
 }
 
+/* slideIn animation gives feedback when a task is added */
 .task-item {
     animation: slideIn 0.3s ease;
 }
