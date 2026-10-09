@@ -1,4 +1,5 @@
 class TaskFlow {
+    // Create the application state and prepare the task interface.
     constructor() {
         this.tasks = this.loadTasks();
         this.taskIdCounter = this.getNextTaskId();
@@ -8,39 +9,61 @@ class TaskFlow {
         this.updateStats();
     }
 
+    // Start the application and display the initial welcome message.
     initializeApp() {
         console.log('TaskFlow initialized successfully!');
         this.showWelcomeMessage();
     }
 
+    // Show a welcome message when there are no saved tasks.
     showWelcomeMessage() {
         if (this.tasks.length === 0) {
             console.log('Welcome to TaskFlow! Add your first task to get started.');
         }
     }
 
+    // Connect the task controls to their event handlers.
+    
+    // Connect the task controls to their event handlers.
     bindEvents() {
         const addTaskBtn = document.getElementById('addTaskBtn');
         const taskInput = document.getElementById('taskInput');
 
+        // Stop if required HTML elements are missing.
+        if (!addTaskBtn || !taskInput) {
+            console.error('Required task elements were not found.');
+            return;
+        }
+
         addTaskBtn.addEventListener('click', () => this.addTask());
-        
+
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.addTask();
             }
         });
 
-        // Focus on input when page loads
+        // Focus on input when page loads.
         taskInput.focus();
     }
 
+
+    // Validate and add a new task to the task list.
     addTask() {
         const taskInput = document.getElementById('taskInput');
         const taskText = taskInput.value.trim();
+if (taskText === '') {
+    this.showNotification('Please enter a task description', 'warning');
+    taskInput.focus();
+    return;
+}
 
-        if (taskText === '') {
-            this.showNotification('Please enter a task description', 'warning');
+        // Prevent task descriptions longer than 200 characters.
+        if (taskText.length > 200) {
+            this.showNotification(
+                'Task cannot exceed 200 characters.',
+                'warning'
+            );
             taskInput.focus();
             return;
         }
@@ -64,6 +87,7 @@ class TaskFlow {
         this.showNotification('Task added successfully!', 'success');
     }
 
+    // Confirm and remove a task from the task list.
     deleteTask(taskId) {
         if (confirm('Are you sure you want to delete this task?')) {
             this.tasks = this.tasks.filter(task => task.id !== taskId);
@@ -74,6 +98,7 @@ class TaskFlow {
         }
     }
 
+    // Toggle a task between completed and pending states.
     toggleTask(taskId) {
         const task = this.tasks.find(task => task.id === taskId);
         if (task) {
@@ -88,6 +113,7 @@ class TaskFlow {
         }
     }
 
+    // Prompt for a new description and update the selected task.
     editTask(taskId) {
         const task = this.tasks.find(task => task.id === taskId);
         if (task) {
@@ -101,6 +127,7 @@ class TaskFlow {
         }
     }
 
+    // Render the current tasks and their action controls in the page.
     renderTasks() {
         const tasksList = document.getElementById('tasksList');
         const emptyState = document.getElementById('emptyState');
@@ -142,6 +169,7 @@ class TaskFlow {
         `).join('');
     }
 
+    // Calculate and display the current task counts.
     updateStats() {
         const totalTasks = this.tasks.length;
         const completedTasks = this.tasks.filter(task => task.completed).length;
@@ -156,6 +184,7 @@ class TaskFlow {
         taskCount.textContent = `${totalTasks} ${totalTasks === 1 ? 'task' : 'tasks'}`;
     }
 
+    // Save tasks and the next task ID in browser storage.
     saveTasks() {
         try {
             localStorage.setItem('taskflow_tasks', JSON.stringify(this.tasks));
@@ -166,6 +195,7 @@ class TaskFlow {
         }
     }
 
+    // Load the saved tasks from browser storage.
     loadTasks() {
         try {
             const saved = localStorage.getItem('taskflow_tasks');
@@ -176,16 +206,25 @@ class TaskFlow {
         }
     }
 
+    // Load the next available task ID from browser storage.
+    
+    // Load the next available task ID from browser storage.
     getNextTaskId() {
         try {
             const saved = localStorage.getItem('taskflow_counter');
-            return saved ? parseInt(saved) : 1;
+            const nextId = parseInt(saved, 10);
+
+            return Number.isNaN(nextId) || nextId < 1
+                ? 1
+                : nextId;
         } catch (error) {
             console.error('Failed to load task counter:', error);
             return 1;
         }
     }
 
+
+    // Escape task text before inserting it into HTML.
     escapeHtml(unsafe) {
         return unsafe
             .replace(/&/g, "&amp;")
@@ -195,6 +234,7 @@ class TaskFlow {
             .replace(/'/g, "&#039;");
     }
 
+    // Display a temporary notification message to the user.
     showNotification(message, type = 'info') {
         // Simple notification system
         console.log(`[${type.toUpperCase()}] ${message}`);
@@ -247,6 +287,7 @@ class TaskFlow {
     }
 
     // Utility methods for potential future features
+    // Download all tasks as a JSON backup file.
     exportTasks() {
         const dataStr = JSON.stringify(this.tasks, null, 2);
         const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -261,6 +302,7 @@ class TaskFlow {
         this.showNotification('Tasks exported successfully!', 'success');
     }
 
+    // Confirm and remove every task from the task list.
     clearAllTasks() {
         if (confirm('Are you sure you want to delete ALL tasks? This cannot be undone.')) {
             this.tasks = [];
@@ -271,6 +313,7 @@ class TaskFlow {
         }
     }
 
+    // Return summary counts for all tasks and today's activity.
     getTaskStats() {
         const now = new Date();
         const stats = {
@@ -292,6 +335,7 @@ class TaskFlow {
 }
 
 // Initialize the app when DOM is loaded
+// Create the TaskFlow instance after the page structure is available.
 document.addEventListener('DOMContentLoaded', () => {
     window.taskFlow = new TaskFlow();
 });
