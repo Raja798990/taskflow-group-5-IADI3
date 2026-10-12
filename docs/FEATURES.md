@@ -4,7 +4,7 @@
 
 ## 🎯 Overview
 
-TaskFlow is a modern, responsive task management application built with vanilla HTML, CSS, and JavaScript. It provides a clean, intuitive interface for managing personal tasks with persistent storage and real-time statistics.
+TaskFlow is a modern, responsive task management application built with vanilla HTML, CSS, and JavaScript. It provides a clean, intuitive interface for managing personal tasks with persistent storage and real-time statistics.xx
 
 ## ✨ Core Features
 

@@ -239,7 +239,7 @@ if (taskText === '') {
         // Simple notification system
         console.log(`[${type.toUpperCase()}] ${message}`);
         
-        // Create notification element
+        // Create notification elementxx
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
