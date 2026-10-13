@@ -1,5 +1,4 @@
 class TaskFlow {
-    // Create the application state and prepare the task interface.
     constructor() {
         this.tasks = this.loadTasks();
         this.taskIdCounter = this.getNextTaskId();
@@ -9,31 +8,20 @@ class TaskFlow {
         this.updateStats();
     }
 
-    // Start the application and display the initial welcome message.
     initializeApp() {
         console.log('TaskFlow initialized successfully!');
         this.showWelcomeMessage();
     }
 
-    // Show a welcome message when there are no saved tasks.
     showWelcomeMessage() {
         if (this.tasks.length === 0) {
             console.log('Welcome to TaskFlow! Add your first task to get started.');
         }
     }
 
-    // Connect the task controls to their event handlers.
-    
-    // Connect the task controls to their event handlers.
     bindEvents() {
         const addTaskBtn = document.getElementById('addTaskBtn');
         const taskInput = document.getElementById('taskInput');
-
-        // Stop if required HTML elements are missing.
-        if (!addTaskBtn || !taskInput) {
-            console.error('Required task elements were not found.');
-            return;
-        }
 
         addTaskBtn.addEventListener('click', () => this.addTask());
 
@@ -43,27 +31,18 @@ class TaskFlow {
             }
         });
 
-        // Focus on input when page loads.
+        // Focus on input when page loads
         taskInput.focus();
     }
 
-
-    // Validate and add a new task to the task list.
     addTask() {
         const taskInput = document.getElementById('taskInput');
+        const prioritySelect = document.getElementById('prioritySelect');
         const taskText = taskInput.value.trim();
-if (taskText === '') {
-    this.showNotification('Please enter a task description', 'warning');
-    taskInput.focus();
-    return;
-}
+        const priority = prioritySelect.value;
 
-        // Prevent task descriptions longer than 200 characters.
-        if (taskText.length > 200) {
-            this.showNotification(
-                'Task cannot exceed 200 characters.',
-                'warning'
-            );
+        if (taskText === '') {
+            this.showNotification('Please enter a task description', 'warning');
             taskInput.focus();
             return;
         }
@@ -71,6 +50,7 @@ if (taskText === '') {
         const newTask = {
             id: this.taskIdCounter++,
             text: taskText,
+            priority: priority,
             completed: false,
             createdAt: new Date().toISOString(),
             completedAt: null
@@ -80,14 +60,14 @@ if (taskText === '') {
         this.saveTasks();
         this.renderTasks();
         this.updateStats();
-        
+
         taskInput.value = '';
+        prioritySelect.value = 'medium';
         taskInput.focus();
-        
+
         this.showNotification('Task added successfully!', 'success');
     }
 
-    // Confirm and remove a task from the task list.
     deleteTask(taskId) {
         if (confirm('Are you sure you want to delete this task?')) {
             this.tasks = this.tasks.filter(task => task.id !== taskId);
@@ -98,7 +78,6 @@ if (taskText === '') {
         }
     }
 
-    // Toggle a task between completed and pending states.
     toggleTask(taskId) {
         const task = this.tasks.find(task => task.id === taskId);
         if (task) {
@@ -107,13 +86,12 @@ if (taskText === '') {
             this.saveTasks();
             this.renderTasks();
             this.updateStats();
-            
+
             const message = task.completed ? 'Task completed! 🎉' : 'Task marked as pending';
             this.showNotification(message, 'success');
         }
     }
 
-    // Prompt for a new description and update the selected task.
     editTask(taskId) {
         const task = this.tasks.find(task => task.id === taskId);
         if (task) {
@@ -127,7 +105,20 @@ if (taskText === '') {
         }
     }
 
-    // Render the current tasks and their action controls in the page.
+    getPriorityValue(priority) {
+        const priorities = { high: 3, medium: 2, low: 1 };
+        return priorities[priority] || 2;
+    }
+
+    getPriorityIcon(priority) {
+        const icons = {
+            high: '🔥',
+            medium: '⚡',
+            low: '📌'
+        };
+        return icons[priority] || '⚡';
+    }
+
     renderTasks() {
         const tasksList = document.getElementById('tasksList');
         const emptyState = document.getElementById('emptyState');
@@ -141,21 +132,33 @@ if (taskText === '') {
         tasksList.style.display = 'flex';
         emptyState.style.display = 'none';
 
-        // Sort tasks: incomplete first, then by creation date
+        // Sort tasks: by priority (high to low), then by completion status, then by creation date
         const sortedTasks = [...this.tasks].sort((a, b) => {
+            // First sort by completion status (incomplete first)
             if (a.completed !== b.completed) {
                 return a.completed - b.completed;
             }
+
+            // Then sort by priority (high to low)
+            const priorityDiff = this.getPriorityValue(b.priority) - this.getPriorityValue(a.priority);
+            if (priorityDiff !== 0) {
+                return priorityDiff;
+            }
+
+            // Finally sort by creation date (newest first)
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
         tasksList.innerHTML = sortedTasks.map(task => `
-            <div class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
+            <div class="task-item ${task.completed ? 'completed' : ''} priority-${task.priority}" data-task-id="${task.id}">
                 <div class="task-content">
-                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                    <div class="task-checkbox ${task.completed ? 'checked' : ''}"
                          onclick="taskFlow.toggleTask(${task.id})">
                     </div>
                     <span class="task-text">${this.escapeHtml(task.text)}</span>
+                    <span class="priority-badge priority-${task.priority}">
+                        ${this.getPriorityIcon(task.priority)} ${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
                 </div>
                 <div class="task-actions">
                     <button class="task-btn edit-btn" onclick="taskFlow.editTask(${task.id})" title="Edit task">
@@ -169,22 +172,22 @@ if (taskText === '') {
         `).join('');
     }
 
-    // Calculate and display the current task counts.
     updateStats() {
         const totalTasks = this.tasks.length;
         const completedTasks = this.tasks.filter(task => task.completed).length;
         const pendingTasks = totalTasks - completedTasks;
+        const highPriorityTasks = this.tasks.filter(task => task.priority === 'high' && !task.completed).length;
 
         document.getElementById('totalTasks').textContent = totalTasks;
         document.getElementById('completedTasks').textContent = completedTasks;
         document.getElementById('pendingTasks').textContent = pendingTasks;
-        
+        document.getElementById('highPriorityTasks').textContent = highPriorityTasks;
+
         // Update task count in header
         const taskCount = document.getElementById('taskCount');
         taskCount.textContent = `${totalTasks} ${totalTasks === 1 ? 'task' : 'tasks'}`;
     }
 
-    // Save tasks and the next task ID in browser storage.
     saveTasks() {
         try {
             localStorage.setItem('taskflow_tasks', JSON.stringify(this.tasks));
@@ -195,36 +198,32 @@ if (taskText === '') {
         }
     }
 
-    // Load the saved tasks from browser storage.
     loadTasks() {
         try {
             const saved = localStorage.getItem('taskflow_tasks');
-            return saved ? JSON.parse(saved) : [];
+            const tasks = saved ? JSON.parse(saved) : [];
+
+            // Add default priority to existing tasks for backward compatibility
+            return tasks.map(task => ({
+                ...task,
+                priority: task.priority || 'medium'
+            }));
         } catch (error) {
             console.error('Failed to load tasks:', error);
             return [];
         }
     }
 
-    // Load the next available task ID from browser storage.
-    
-    // Load the next available task ID from browser storage.
     getNextTaskId() {
         try {
             const saved = localStorage.getItem('taskflow_counter');
-            const nextId = parseInt(saved, 10);
-
-            return Number.isNaN(nextId) || nextId < 1
-                ? 1
-                : nextId;
+            return saved ? parseInt(saved) : 1;
         } catch (error) {
             console.error('Failed to load task counter:', error);
             return 1;
         }
     }
 
-
-    // Escape task text before inserting it into HTML.
     escapeHtml(unsafe) {
         return unsafe
             .replace(/&/g, "&amp;")
@@ -234,12 +233,11 @@ if (taskText === '') {
             .replace(/'/g, "&#039;");
     }
 
-    // Display a temporary notification message to the user.
     showNotification(message, type = 'info') {
         // Simple notification system
         console.log(`[${type.toUpperCase()}] ${message}`);
-        
-        // Create notification elementxx
+
+        // Create notification element
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
@@ -264,18 +262,18 @@ if (taskText === '') {
             warning: '#ed8936',
             info: '#3182ce'
         };
-        
+
         notification.style.background = colors[type] || colors.info;
         notification.textContent = message;
-        
+
         document.body.appendChild(notification);
-        
+
         // Animate in
         setTimeout(() => {
             notification.style.opacity = '1';
             notification.style.transform = 'translateY(0)';
         }, 100);
-        
+
         // Remove after 3 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
@@ -287,22 +285,20 @@ if (taskText === '') {
     }
 
     // Utility methods for potential future features
-    // Download all tasks as a JSON backup file.
     exportTasks() {
         const dataStr = JSON.stringify(this.tasks, null, 2);
         const dataBlob = new Blob([dataStr], {type: 'application/json'});
         const url = URL.createObjectURL(dataBlob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = 'taskflow_backup.json';
         link.click();
-        
+
         URL.revokeObjectURL(url);
         this.showNotification('Tasks exported successfully!', 'success');
     }
 
-    // Confirm and remove every task from the task list.
     clearAllTasks() {
         if (confirm('Are you sure you want to delete ALL tasks? This cannot be undone.')) {
             this.tasks = [];
@@ -313,13 +309,15 @@ if (taskText === '') {
         }
     }
 
-    // Return summary counts for all tasks and today's activity.
     getTaskStats() {
         const now = new Date();
         const stats = {
             total: this.tasks.length,
             completed: this.tasks.filter(t => t.completed).length,
             pending: this.tasks.filter(t => !t.completed).length,
+            highPriority: this.tasks.filter(t => t.priority === 'high' && !t.completed).length,
+            mediumPriority: this.tasks.filter(t => t.priority === 'medium' && !t.completed).length,
+            lowPriority: this.tasks.filter(t => t.priority === 'low' && !t.completed).length,
             createdToday: this.tasks.filter(t => {
                 const taskDate = new Date(t.createdAt);
                 return taskDate.toDateString() === now.toDateString();
@@ -335,7 +333,6 @@ if (taskText === '') {
 }
 
 // Initialize the app when DOM is loaded
-// Create the TaskFlow instance after the page structure is available.
 document.addEventListener('DOMContentLoaded', () => {
     window.taskFlow = new TaskFlow();
 });
